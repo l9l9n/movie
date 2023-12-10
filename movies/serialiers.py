@@ -3,6 +3,13 @@ from rest_framework import serializers
 from .models import Movie, Review
 
 
+class RecursiveSerializer(serializers.Serializer):
+    """Вывод рекурсивно children"""
+    def to_representation(self, instance):
+        serializer = self.parent.parent.__class__(instance, context=self.context)
+        return serializer.data
+
+
 class MovieListSerializer(serializers.ModelSerializer):
     """List films"""
 
@@ -21,10 +28,11 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Вывод отзыва"""
+    children = RecursiveSerializer(many=True)
 
     class Meta:
         model = Review
-        fields = ("name", "text", "parent")
+        fields = ("name", "text", "children")
 
 
 class MovieDetailSerializer(serializers.ModelSerializer):
