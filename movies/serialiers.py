@@ -1,17 +1,24 @@
 from rest_framework import serializers
 
-from .models import Movie, Review
+from .models import Movie, Review, Rating
+
+
+class FilterReviewListSerializer(serializers.ListSerializer):
+    """Фильтр комментариев, только parents"""
+    def to_representation(self, data):
+        data = data.filter(parent=None)
+        return super().to_representation(data)
 
 
 class RecursiveSerializer(serializers.Serializer):
     """Вывод рекурсивно children"""
     def to_representation(self, instance):
-        serializer = self.parent.parent.__class__(instance, context=self.context)
+        serializer = self.parent.parent.__class__(instance, context=self.context) # здесь мы ищем всех детей завязаных в отзыве
         return serializer.data
 
 
 class MovieListSerializer(serializers.ModelSerializer):
-    """List films"""
+    """Список фильмов"""
 
     class Meta:
         model = Movie
@@ -31,6 +38,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     children = RecursiveSerializer(many=True)
 
     class Meta:
+        list_serializer_class = FilterReviewListSerializer
         model = Review
         fields = ("name", "text", "children")
 
@@ -46,3 +54,18 @@ class MovieDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         exclude = ('draft',)  # Показывать все поля кроме драфт из моделей exclude==исключить
+
+
+class CreateRatingSerializer(serializers.ModelSerializer):
+    """Добавление рейтинга пользователей"""
+
+    class Meta:
+        model = Rating
+        fields = ("star", "movie")
+
+    def create(self, validated_data):
+        rating = Rating.objects.update_or_create(ip=validated_data.get('ip', None),
+                                                 movie=validated_data.get('movie', None),
+                                                 defaults={'star': validated_data.get('star')})
+        return rating
+

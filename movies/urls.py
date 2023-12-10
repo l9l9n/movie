@@ -2,12 +2,13 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from .views import MovieListView, MovieDetailView, ReviewCreateView
+from .views import MovieListView, MovieDetailView, ReviewCreateView, AddStarRatingView
 
 urlpatterns = [
     path("movie/", MovieListView.as_view()),
     path("movie/<int:pk>/", MovieDetailView.as_view()),
     path("review/", ReviewCreateView.as_view()),
+    path("rating/", AddStarRatingView.as_view()),
 
 ]
 
